@@ -1,0 +1,16 @@
+{
+  "name": "batchline",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm test --workspaces --if-present"
+  },
+  "workspaces": [
+    "server",
+    "dashboard",
+    "shared"
+  ],
+  "packageManager": "pnpm@9.15.0"
+}
