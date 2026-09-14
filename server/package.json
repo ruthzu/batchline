@@ -7,7 +7,8 @@
     "dev": "node src/index.ts",
     "start": "node dist/index.js",
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "provision:db": "node scripts/provision-db.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.700.0",
