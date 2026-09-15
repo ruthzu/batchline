@@ -1,6 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { createServer } from "node:http";
 import { z } from "zod";
+import { recordBatchTool } from "./tools/record-batch.js";
+import { correctBatchTool } from "./tools/correct-batch.js";
 
 const server = new McpServer({
   name: "batchline",
@@ -18,13 +21,40 @@ server.tool(
   },
 );
 
+server.registerTool(
+  "record_batch",
+  {
+    description: "Record a new production batch with its ingredient lots linked",
+    inputSchema: recordBatchTool.schema,
+  },
+  recordBatchTool.handler,
+);
+
+server.registerTool(
+  "correct_batch_record",
+  {
+    description: "Correct a wrong ingredient lot on an existing batch record",
+    inputSchema: correctBatchTool.schema,
+  },
+  correctBatchTool.handler,
+);
+
 async function main() {
+  const port = parseInt(process.env.PORT ?? "3001", 10);
+
   const transport = new StreamableHTTPServerTransport({
-    port: parseInt(process.env.PORT ?? "3001", 10),
+    sessionIdGenerator: () => crypto.randomUUID(),
   });
 
   await server.connect(transport);
-  console.log("Batchline MCP server listening on port", transport.port);
+
+  const httpServer = createServer((req, res) => {
+    transport.handleRequest(req, res);
+  });
+
+  httpServer.listen(port, () => {
+    console.log("Batchline MCP server listening on port", port);
+  });
 }
 
 main().catch((error) => {
