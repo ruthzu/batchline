@@ -1,5 +1,5 @@
 import { CreateTableCommand, DescribeTableCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { createDynamoDbClient } from "../db/client.js";
+import { createDynamoDbClient } from "../src/db/client.js";
 
 const TABLE_NAME = process.env.DYNAMODB_TABLE ?? "Batchline";
 

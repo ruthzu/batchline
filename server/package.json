@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node src/index.ts",
+    "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "provision:db": "node scripts/provision-db.ts"
+    "provision:db": "tsx scripts/provision-db.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.700.0",
@@ -18,6 +18,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "tsx": "^4.23.13",
     "typescript": "^5.7.0"
   }
 }
