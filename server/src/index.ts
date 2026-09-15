@@ -3,6 +3,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { createServer } from "node:http";
 import { z } from "zod";
 import { recordBatchTool } from "./tools/record-batch.js";
+import { correctBatchTool } from "./tools/correct-batch.js";
 
 import type {
   Lot,
@@ -39,9 +40,18 @@ server.registerTool(
   recordBatchTool.handler,
 );
 
+server.registerTool(
+  "correct_batch_record",
+  {
+    description: "Correct a wrong ingredient lot on an existing batch record",
+    inputSchema: correctBatchTool.schema,
+  },
+  correctBatchTool.handler,
+);
+
 async function main() {
   const port = parseInt(process.env.PORT ?? "3001", 10);
-  
+
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: () => crypto.randomUUID(),
   });
