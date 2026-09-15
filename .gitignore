@@ -8,3 +8,5 @@ out
 *.log
 coverage
 .build/
+dynamodb-local/
+*.db

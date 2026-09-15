@@ -5,6 +5,16 @@ import { z } from "zod";
 import { recordBatchTool } from "./tools/record-batch.js";
 import { correctBatchTool } from "./tools/correct-batch.js";
 
+import type {
+  Lot,
+  Batch,
+  Order,
+  BatchIngredientLink,
+  BatchOrderLink,
+  CorrectionRecord,
+  IdempotencyRecord,
+} from "@batchline/shared";
+
 const server = new McpServer({
   name: "batchline",
   version: "0.1.0",

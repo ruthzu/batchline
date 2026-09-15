@@ -1,23 +1,54 @@
 export interface Lot {
-  // TODO: fill in fields
+  lotId: string;
+  ingredientName: string;
+  supplier: string;
+  receivedDate: string; // ISO 8601
+  quantity: number;
 }
 
 export interface Batch {
-  // TODO: fill in fields
+  batchId: string;
+  product: string;
+  producedDate: string; // ISO 8601
+  batchSize: number;
 }
 
+export type CollectionStatus = "collected" | "uncollected" | "incomplete";
+
 export interface Order {
-  // TODO: fill in fields
+  orderId: string;
+  customerName: string;
+  customerContact: string;
+  status: string;
+  collectionStatus: CollectionStatus;
 }
 
 export interface BatchIngredientLink {
-  // TODO: fill in fields
+  lotId: string;
+  batchId: string;
+  quantityUsed: number;
 }
 
 export interface BatchOrderLink {
-  // TODO: fill in fields
+  batchId: string;
+  orderId: string;
+  quantityAllocated: number;
 }
 
 export interface CorrectionRecord {
-  // TODO: fill in fields
+  batchId: string;
+  timestamp: string; // ISO 8601
+  originalLotId: string;
+  correctedLotId: string;
+  reason: string;
+  correctedBy: string;
+  affectedOrderIds: string[];
+}
+
+export interface IdempotencyRecord {
+  idempotencyKey: string;
+  requestHash: string;
+  result: unknown;
+  executedAt: string;
+  ttl: number; // epoch seconds
 }
