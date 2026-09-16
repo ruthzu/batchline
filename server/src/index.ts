@@ -4,6 +4,7 @@ import { createServer } from "node:http";
 import { z } from "zod";
 import { recordBatchTool } from "./tools/record-batch.js";
 import { correctBatchTool } from "./tools/correct-batch.js";
+import { traceLotTool } from "./tools/trace-lot.js";
 
 import type {
   Lot,
@@ -47,6 +48,15 @@ server.registerTool(
     inputSchema: correctBatchTool.schema,
   },
   correctBatchTool.handler,
+);
+
+server.registerTool(
+  "trace_ingredient_lot",
+  {
+    description: "Trace where an ingredient lot was used across batches and which customer orders those batches shipped to",
+    inputSchema: traceLotTool.schema,
+  },
+  traceLotTool.handler,
 );
 
 async function main() {
