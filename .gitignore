@@ -10,3 +10,6 @@ coverage
 .build/
 dynamodb-local/
 *.db
+
+# Personal learning notes — never tracked (NOTES.md)
+NOTES.md

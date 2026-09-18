@@ -5,6 +5,8 @@ import { z } from "zod";
 import { recordBatchTool } from "./tools/record-batch.js";
 import { correctBatchTool } from "./tools/correct-batch.js";
 import { traceLotTool } from "./tools/trace-lot.js";
+import { previewResponseTool } from "./tools/preview-response.js";
+import { commitResponseTool } from "./tools/commit-response.js";
 
 import type {
   Lot,
@@ -57,6 +59,24 @@ server.registerTool(
     inputSchema: traceLotTool.schema,
   },
   traceLotTool.handler,
+);
+
+server.registerTool(
+  "preview_response",
+  {
+    description: "Draft the customer response for a set of affected orders without changing anything, returning a previewId to approve",
+    inputSchema: previewResponseTool.schema,
+  },
+  previewResponseTool.handler,
+);
+
+server.registerTool(
+  "commit_approved_response",
+  {
+    description: "Execute an approved response preview, putting each order on hold, marking it notified, or flagging it, exactly once per idempotency key",
+    inputSchema: commitResponseTool.schema,
+  },
+  commitResponseTool.handler,
 );
 
 async function main() {
