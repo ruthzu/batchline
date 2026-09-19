@@ -1,4 +1,4 @@
-import type { Lot, Batch, Order } from "@batchline/shared";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -7,6 +7,12 @@ export default function Home() {
       <p className="mt-2 text-gray-600">
         Placeholder home page.
       </p>
+      <Link
+        href="/orders"
+        className="mt-8 inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+      >
+        View Order Board /
+      </Link>
     </main>
   );
 }
