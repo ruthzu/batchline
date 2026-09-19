@@ -10,3 +10,4 @@ coverage
 .build/
 dynamodb-local/
 *.db
+NOTES.md
