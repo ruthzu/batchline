@@ -1,4 +1,5 @@
 import { ScanCommand } from "@aws-sdk/lib-dynamodb";
+import type { ScanCommandOutput } from "@aws-sdk/lib-dynamodb";
 import type { Order } from "@batchline/shared";
 import { documentClient, TABLE_NAME } from "./db";
 
@@ -26,7 +27,7 @@ export async function getAllOrders(): Promise<Order[]> {
   let lastEvaluatedKey: Record<string, unknown> | undefined = undefined;
 
   do {
-    const result = await documentClient.send(
+    const result: ScanCommandOutput = await documentClient.send(
       new ScanCommand({
         TableName: TABLE_NAME,
         FilterExpression: "#entityType = :entityType",
