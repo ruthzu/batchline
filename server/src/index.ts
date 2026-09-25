@@ -7,6 +7,7 @@ import { correctBatchTool } from "./tools/correct-batch.js";
 import { traceLotTool, TraceLotToolError } from "./tools/trace-lot.js";
 import { previewResponseTool } from "./tools/preview-response.js";
 import { commitResponseTool } from "./tools/commit-response.js";
+import { routeVoiceCommand } from "./voice/route-command.js";
 
 import type {
   Lot,
@@ -85,7 +86,7 @@ const DASHBOARD_ORIGIN = process.env.DASHBOARD_ORIGIN ?? "http://localhost:3000"
 
 function setCorsHeaders(res: any): void {
   res.setHeader("Access-Control-Allow-Origin", DASHBOARD_ORIGIN);
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
@@ -153,6 +154,55 @@ async function handleTraceLot(req: any, res: any): Promise<void> {
   }
 }
 
+async function handleVoiceCommand(req: any, res: any): Promise<void> {
+  // Same CORS treatment as /api/trace-lot: every response — success or error —
+  // carries the allow-origin headers or the browser blocks the body.
+  setCorsHeaders(res);
+
+  if (req.method === "OPTIONS") {
+    res.statusCode = 204;
+    res.end();
+    return;
+  }
+
+  if (req.method !== "POST") {
+    sendJson(res, 405, { code: "METHOD_NOT_ALLOWED", message: "Use POST with a JSON body: { transcript: string }" });
+    return;
+  }
+
+  // Read and size-cap the request body before parsing.
+  let body = "";
+  for await (const chunk of req) {
+    body += chunk;
+    if (body.length > 10_000) {
+      sendJson(res, 413, { code: "PAYLOAD_TOO_LARGE", message: "Request body too large" });
+      return;
+    }
+  }
+
+  let transcript: unknown;
+  try {
+    transcript = JSON.parse(body)?.transcript;
+  } catch {
+    sendJson(res, 400, { code: "BAD_REQUEST", message: "Request body must be valid JSON" });
+    return;
+  }
+
+  if (typeof transcript !== "string") {
+    sendJson(res, 400, { code: "BAD_REQUEST", message: "'transcript' must be a string" });
+    return;
+  }
+
+  try {
+    const result = await routeVoiceCommand(transcript);
+    sendJson(res, 200, result);
+  } catch (error) {
+    // routeVoiceCommand catches its own tool errors; this is a last resort.
+    console.error("Unexpected error in /api/voice-command:", error);
+    sendJson(res, 500, { code: "INTERNAL_ERROR", message: "An unexpected error occurred" });
+  }
+}
+
 async function main() {
   const port = parseInt(process.env.PORT ?? "3001", 10);
 
@@ -167,6 +217,10 @@ async function main() {
     if (req.url?.startsWith("/api/")) {
       if (req.url.startsWith("/api/trace-lot")) {
         handleTraceLot(req, res);
+        return;
+      }
+      if (req.url.startsWith("/api/voice-command")) {
+        handleVoiceCommand(req, res);
         return;
       }
       // Unknown /api/* — 404, don't pass to MCP transport.
