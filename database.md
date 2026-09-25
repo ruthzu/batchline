@@ -70,3 +70,12 @@ Attributes:
 - **Lot-Batch relationships** are stored as link items with the inverted GSI for querying "which batches used this lot?"
 - **Lots** are created on-demand with minimal placeholder data when first referenced in a batch record, allowing a separate registration flow to fill in details later
 - **Transactions** ensure batch records and their lot links are written atomically
+
+## `collectionStatus` vs `status` on Order Items
+
+Orders carry two independent status fields, and they must not be conflated:
+
+- **`collectionStatus`** (`"collected" | "uncollected" | "incomplete"`) — whether the customer has *physically received* the order. This is the field read by `trace_ingredient_lot` when summarizing affected customers during a recall trace. `"incomplete"` also serves as the fallback when an order's METADATA item is missing or lacks the field.
+- **`status`** (`"fulfilled" | "on_hold" | "notified" | "flagged_incomplete"`) — the *recall-response workflow* state shown on the order board and read by `commit_approved_response`.
+
+Nothing in the data model currently enforces that `collectionStatus` is always set (there is no order-creation tool yet), so writers — including `dashboard/scripts/seed-orders.ts` — must set both fields explicitly. Omitting `collectionStatus` makes orders silently surface as `"incomplete"` in traces.

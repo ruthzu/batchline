@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { documentClient, TABLE_NAME } from "../db/client.js";
 import { GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import type {
+  TraceLotResult,
+  TracedBatch,
+  TracedOrder,
+} from "@batchline/shared";
 
 // Input schema for the trace_ingredient_lot tool
 export const traceLotSchema = z.object({
@@ -9,28 +14,11 @@ export const traceLotSchema = z.object({
 
 export type TraceLotInput = z.infer<typeof traceLotSchema>;
 
-export type TracedOrder = {
-  orderId: string;
-  customerName?: string;
-  collectionStatus: "collected" | "uncollected" | "incomplete";
-};
-
-export type TracedBatch = {
-  batchId: string;
-  product?: string;
-  producedDate?: string;
-  orders: TracedOrder[];
-};
-
-export type TraceLotResult = {
-  lotId: string;
-  batches: TracedBatch[];
-  summary: {
-    collected: number;
-    uncollected: number;
-    incomplete: number;
-  };
-};
+// TracedOrder / TracedBatch / TraceLotResult are defined in @batchline/shared
+// so the server and the dashboard share one authoritative definition instead
+// of two copies that can drift apart. Re-exported here so existing imports
+// from this module keep working.
+export type { TraceLotResult, TracedBatch, TracedOrder };
 
 export type TraceLotError = {
   code: "LOT_NOT_FOUND";

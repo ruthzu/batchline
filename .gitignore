@@ -11,3 +11,4 @@ coverage
 dynamodb-local/
 *.db
 NOTES.md
+*.tsbuildinfo

@@ -52,3 +52,30 @@ export interface IdempotencyRecord {
   executedAt: string;
   ttl: number; // epoch seconds
 }
+
+// --- Trace results ---
+// Shared by trace_ingredient_lot (server) and the /trace dashboard page so
+// both sides use one authoritative definition instead of drifting apart.
+
+export interface TracedOrder {
+  orderId: string;
+  customerName?: string;
+  collectionStatus: CollectionStatus;
+}
+
+export interface TracedBatch {
+  batchId: string;
+  product?: string;
+  producedDate?: string;
+  orders: TracedOrder[];
+}
+
+export interface TraceLotResult {
+  lotId: string;
+  batches: TracedBatch[];
+  summary: {
+    collected: number;
+    uncollected: number;
+    incomplete: number;
+  };
+}
