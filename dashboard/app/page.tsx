@@ -9,6 +9,12 @@ export default function Home() {
       </p>
       <div className="mt-8 flex flex-col gap-3">
         <Link
+          href="/batches"
+          className="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+        >
+          View Batch Board /
+        </Link>
+        <Link
           href="/orders"
           className="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
         >
