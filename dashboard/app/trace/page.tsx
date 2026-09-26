@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import {
   Node,
   Edge,
@@ -120,18 +121,24 @@ function makeOrderEdges(
   return edges;
 }
 
-export default function TracePage() {
-  const [lotId, setLotId] = useState("");
+function TracePageContent() {
+  const searchParams = useSearchParams();
+  // Pre-fill from /trace?lotId=<id> deep links (e.g. the batch board's
+  // "Trace" buttons). Falls back to "" for a plain /trace visit, which
+  // behaves exactly as before.
+  const [lotId, setLotId] = useState(() => searchParams.get("lotId") ?? "");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TraceLotResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
-  const handleTrace = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!lotId.trim()) return;
+  // Core trace fetch, shared by the manual form submit (handleTrace) and the
+  // automatic run-on-mount for a ?lotId= deep link (see the effect below) —
+  // one implementation, two entry points.
+  const runTrace = useCallback(
+    async (rawLotId: string) => {
+      if (!rawLotId.trim()) return;
 
       setLoading(true);
       setResult(null);
@@ -140,7 +147,7 @@ export default function TracePage() {
 
       try {
         const url = `${MCP_SERVER_URL}/api/trace-lot?lotId=${encodeURIComponent(
-          lotId.trim()
+          rawLotId.trim()
         )}`;
         const response = await fetch(url);
 
@@ -169,8 +176,32 @@ export default function TracePage() {
         setLoading(false);
       }
     },
-    [lotId, MCP_SERVER_URL]
+    [MCP_SERVER_URL]
   );
+
+  const handleTrace = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      await runTrace(lotId);
+    },
+    [runTrace, lotId]
+  );
+
+  // Deep-link support: /trace?lotId=<id> pre-fills the input (via the
+  // useState initializer above) and automatically runs the trace once on
+  // mount so "Trace" links from the batch board land on a rendered graph.
+  // Without the param this effect does nothing and the page waits for a
+  // manual search, exactly as before. The ref guard makes it run once even
+  // though React StrictMode invokes effects twice in dev.
+  const autoLotId = searchParams.get("lotId");
+  const autoRanRef = useRef(false);
+  useEffect(() => {
+    if (autoRanRef.current) return;
+    if (autoLotId && autoLotId.trim()) {
+      autoRanRef.current = true;
+      void runTrace(autoLotId);
+    }
+  }, [autoLotId, runTrace]);
 
   useEffect(() => {
     if (result && reactFlowWrapper.current) {
@@ -460,5 +491,23 @@ export default function TracePage() {
         }
       `}</style>
     </div>
+  );
+}
+
+/**
+ * useSearchParams() requires a Suspense boundary in Next 15 (the inner
+ * content opts out of static prerendering, so the shell needs a fallback).
+ */
+export default function TracePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-white">
+          <p className="text-sm text-gray-500">Loading trace…</p>
+        </div>
+      }
+    >
+      <TracePageContent />
+    </Suspense>
   );
 }
