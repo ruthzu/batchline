@@ -5,6 +5,7 @@ import { correctBatchTool, CorrectBatchToolError } from "../tools/correct-batch.
 import { traceLotTool, TraceLotToolError } from "../tools/trace-lot.js";
 import { previewResponseTool, PreviewResponseToolError } from "../tools/preview-response.js";
 import { commitResponseTool, CommitResponseToolError } from "../tools/commit-response.js";
+import { registerOrderTool, RegisterOrderToolError } from "../tools/register-order.js";
 import { getVoiceToolSchema, voiceToolDefinitions } from "./tool-definitions.js";
 import type { TraceLotResult } from "@batchline/shared";
 
@@ -128,6 +129,20 @@ const TOOL_EXECUTORS: Record<
     };
   },
 
+  register_order: async (args) => {
+    const input = args as z.infer<typeof registerOrderTool.schema>;
+    const result = await registerOrderTool.handler(input);
+    const parsed = JSON.parse(result.content[0].text) as {
+      orderId: string;
+      batchId: string;
+      status: string;
+    };
+    return {
+      parsed,
+      spoken: `Order ${parsed.orderId} registered for ${input.customerName}, linked to batch ${parsed.batchId}.`,
+    };
+  },
+
   commit_approved_response: async (args) => {
     const result = await commitResponseTool.handler(
       args as z.infer<typeof commitResponseTool.schema>
@@ -168,6 +183,8 @@ const SPOKEN_ERRORS: Record<string, (e: TypedToolError) => string> = {
     `You mentioned the same order more than once. Each order can only have one action — say it again with each order just once.`,
   IDEMPOTENCY_KEY_REUSED: () =>
     `That approval was already used for a different request. Say the commit again and I'll use a fresh approval key.`,
+  ORDER_ALREADY_EXISTS: (e) =>
+    `Order ${e.message.match(/'([^']+)'/)?.[1] ?? ""} is already registered, so nothing was changed. Orders can only be registered once — use a new order ID.`,
   INVALID_INGREDIENT_LOT: () =>
     `One of the ingredient lots was missing an ID or quantity. Say the batch again with each lot and its quantity.`,
 };
@@ -303,7 +320,8 @@ export async function routeVoiceCommand(
       error instanceof CorrectBatchToolError ||
       error instanceof TraceLotToolError ||
       error instanceof PreviewResponseToolError ||
-      error instanceof CommitResponseToolError
+      error instanceof CommitResponseToolError ||
+      error instanceof RegisterOrderToolError
     ) {
       // Typed tool error: explain it in plain spoken language, not a raw code.
       return {

@@ -7,6 +7,7 @@ import { correctBatchTool } from "./tools/correct-batch.js";
 import { traceLotTool, TraceLotToolError } from "./tools/trace-lot.js";
 import { previewResponseTool } from "./tools/preview-response.js";
 import { commitResponseTool } from "./tools/commit-response.js";
+import { registerOrderTool } from "./tools/register-order.js";
 import { routeVoiceCommand } from "./voice/route-command.js";
 
 import type {
@@ -78,6 +79,15 @@ server.registerTool(
     inputSchema: commitResponseTool.schema,
   },
   commitResponseTool.handler,
+);
+
+server.registerTool(
+  "register_order",
+  {
+    description: "Register a new customer order linked to an existing batch, with its collection status stated explicitly",
+    inputSchema: registerOrderTool.schema,
+  },
+  registerOrderTool.handler,
 );
 
 // --- REST API routes (coexist with MCP transport on the same HTTP server) ---
