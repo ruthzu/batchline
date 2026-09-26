@@ -4,6 +4,7 @@ import { correctBatchTool } from "../tools/correct-batch.js";
 import { traceLotTool } from "../tools/trace-lot.js";
 import { previewResponseTool } from "../tools/preview-response.js";
 import { commitResponseTool } from "../tools/commit-response.js";
+import { registerOrderTool } from "../tools/register-order.js";
 
 // Tool names, descriptions, and Zod schemas are the SAME ones registered on
 // the MCP server in src/index.ts — they are not reinvented here. The only
@@ -34,6 +35,11 @@ const VOICE_TOOLS = [
     name: "commit_approved_response",
     description: "Execute an approved response preview, putting each order on hold, marking it notified, or flagging it, exactly once per idempotency key",
     schema: commitResponseTool.schema,
+  },
+  {
+    name: "register_order",
+    description: "Register a new customer order linked to an existing batch, with its collection status stated explicitly",
+    schema: registerOrderTool.schema,
   },
 ] as const;
 
