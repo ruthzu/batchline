@@ -5,6 +5,7 @@ import { traceLotTool } from "../tools/trace-lot.js";
 import { previewResponseTool } from "../tools/preview-response.js";
 import { commitResponseTool } from "../tools/commit-response.js";
 import { registerOrderTool } from "../tools/register-order.js";
+import { updateCollectionStatusTool } from "../tools/update-collection-status.js";
 
 // Tool names, descriptions, and Zod schemas are the SAME ones registered on
 // the MCP server in src/index.ts — they are not reinvented here. The only
@@ -40,6 +41,11 @@ const VOICE_TOOLS = [
     name: "register_order",
     description: "Register a new customer order linked to an existing batch, with its collection status stated explicitly",
     schema: registerOrderTool.schema,
+  },
+  {
+    name: "update_collection_status",
+    description: "Mark a customer order's physical pickup state as collected or uncollected, recording who changed it",
+    schema: updateCollectionStatusTool.schema,
   },
 ] as const;
 

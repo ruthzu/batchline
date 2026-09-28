@@ -8,6 +8,7 @@ import { traceLotTool, TraceLotToolError } from "./tools/trace-lot.js";
 import { previewResponseTool } from "./tools/preview-response.js";
 import { commitResponseTool } from "./tools/commit-response.js";
 import { registerOrderTool } from "./tools/register-order.js";
+import { updateCollectionStatusTool } from "./tools/update-collection-status.js";
 import { routeVoiceCommand } from "./voice/route-command.js";
 
 import type {
@@ -88,6 +89,15 @@ server.registerTool(
     inputSchema: registerOrderTool.schema,
   },
   registerOrderTool.handler,
+);
+
+server.registerTool(
+  "update_collection_status",
+  {
+    description: "Mark a customer order's physical pickup state as collected or uncollected, recording who changed it",
+    inputSchema: updateCollectionStatusTool.schema,
+  },
+  updateCollectionStatusTool.handler,
 );
 
 // --- REST API routes (coexist with MCP transport on the same HTTP server) ---

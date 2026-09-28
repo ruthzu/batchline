@@ -15,6 +15,22 @@ const STATUS_LABEL: Record<string, string> = {
   flagged_incomplete: "Flagged",
 };
 
+// Physical pickup state - an independent field from the recall-workflow status
+// above. A missing field renders as "Missing" (dashed styling) rather than
+// masquerading as a real state, because absent data is not a state someone
+// chose.
+const COLLECTION_CLASS: Record<string, string> = {
+  collected: "bg-emerald-100 text-emerald-800",
+  uncollected: "bg-orange-100 text-orange-800",
+  incomplete: "bg-gray-100 text-gray-600",
+};
+
+const COLLECTION_LABEL: Record<string, string> = {
+  collected: "Collected",
+  uncollected: "Uncollected",
+  incomplete: "Incomplete",
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function OrdersPage() {
@@ -89,6 +105,12 @@ export default async function OrdersPage() {
                         >
                           Status
                         </th>
+                        <th
+                          className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                          scope="col"
+                        >
+                          Collection
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -109,6 +131,22 @@ export default async function OrdersPage() {
                             >
                               {STATUS_LABEL[order.status] ?? order.status}
                             </span>
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3">
+                            {order.collectionStatus === undefined ? (
+                              <span
+                                className="inline-flex items-center rounded-full border border-dashed border-gray-400 px-2.5 py-0.5 text-xs font-semibold text-gray-500"
+                                title="collectionStatus is missing from this order's record"
+                              >
+                                Missing
+                              </span>
+                            ) : (
+                              <span
+                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLLECTION_CLASS[order.collectionStatus] ?? "bg-gray-100 text-gray-800"}`}
+                              >
+                                {COLLECTION_LABEL[order.collectionStatus] ?? order.collectionStatus}
+                              </span>
+                            )}
                           </td>
                         </tr>
                       ))}
