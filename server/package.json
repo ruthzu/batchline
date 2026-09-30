@@ -8,7 +8,8 @@
     "start": "node --env-file-if-exists=.env dist/src/index.js",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "provision:db": "tsx scripts/provision-db.ts"
+    "provision:db": "tsx scripts/provision-db.ts",
+    "test:demo": "tsx src/integration-tests/demo-script.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.700.0",

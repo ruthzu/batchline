@@ -20,7 +20,10 @@ export interface Order {
   customerName: string;
   customerContact: string;
   status: string;
-  collectionStatus: CollectionStatus;
+  // Physically absent when the data went missing (the genuine "incomplete"
+  // case) - undefined is meaningful and must survive to the UI, which renders
+  // it distinctly instead of guessing a state
+  collectionStatus?: CollectionStatus;
 }
 
 export interface BatchIngredientLink {

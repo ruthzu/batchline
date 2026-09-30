@@ -18,8 +18,9 @@ import { documentClient, TABLE_NAME } from "./db";
  * partition), so this is a Scan with an entityType filter, paginated via
  * LastEvaluatedKey. Fine at dashboard scale; revisit if this ever grows.
  *
- * Orders only mutate through the MCP server's commit_approved_response tool
- * (status: fulfilled -> on_hold | notified | flagged_incomplete), so results
+ * Orders mutate through the MCP server's commit_approved_response tool
+ * (status: fulfilled -> on_hold | notified | flagged_incomplete) and its
+ * update_collection_status tool (collectionStatus <-> missing), so results
  * must never be cached — the page renders this on every request.
  */
 export async function getAllOrders(): Promise<Order[]> {
@@ -39,7 +40,9 @@ export async function getAllOrders(): Promise<Order[]> {
 
     for (const item of result.Items ?? []) {
       // Skip anything that isn't a complete ORDER METADATA item rather than
-      // rendering a broken row.
+      // rendering a broken row. collectionStatus may be legitimately ABSENT
+      // (the genuine "incomplete" case) - that is kept as undefined and the
+      // UI renders it as "Missing" instead of inventing a state.
       if (
         typeof item.orderId === "string" &&
         typeof item.customerName === "string" &&
@@ -47,7 +50,8 @@ export async function getAllOrders(): Promise<Order[]> {
         typeof item.status === "string" &&
         (item.collectionStatus === "collected" ||
           item.collectionStatus === "uncollected" ||
-          item.collectionStatus === "incomplete")
+          item.collectionStatus === "incomplete" ||
+          item.collectionStatus === undefined)
       ) {
         orders.push({
           orderId: item.orderId,

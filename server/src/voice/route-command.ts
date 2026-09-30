@@ -6,6 +6,10 @@ import { traceLotTool, TraceLotToolError } from "../tools/trace-lot.js";
 import { previewResponseTool, PreviewResponseToolError } from "../tools/preview-response.js";
 import { commitResponseTool, CommitResponseToolError } from "../tools/commit-response.js";
 import { registerOrderTool, RegisterOrderToolError } from "../tools/register-order.js";
+import {
+  updateCollectionStatusTool,
+  UpdateCollectionStatusToolError,
+} from "../tools/update-collection-status.js";
 import { getVoiceToolSchema, voiceToolDefinitions } from "./tool-definitions.js";
 import type { TraceLotResult } from "@batchline/shared";
 
@@ -143,6 +147,25 @@ const TOOL_EXECUTORS: Record<
     };
   },
 
+  update_collection_status: async (args) => {
+    const result = await updateCollectionStatusTool.handler(
+      args as z.infer<typeof updateCollectionStatusTool.schema>
+    );
+    const parsed = JSON.parse(result.content[0].text) as {
+      orderId: string;
+      collectionStatus: string;
+      changed: boolean;
+    };
+    return {
+      parsed,
+      // "changed: false" is not an error - the order was already in the
+      // requested state, and the baker should hear that nothing happened.
+      spoken: parsed.changed
+        ? `Order ${parsed.orderId} is now marked as ${parsed.collectionStatus}.`
+        : `Order ${parsed.orderId} was already marked as ${parsed.collectionStatus}; nothing changed.`,
+    };
+  },
+
   commit_approved_response: async (args) => {
     const result = await commitResponseTool.handler(
       args as z.infer<typeof commitResponseTool.schema>
@@ -178,13 +201,15 @@ const SPOKEN_ERRORS: Record<string, (e: TypedToolError) => string> = {
   LOT_NOT_FOUND: (e) =>
     `I couldn't find that ingredient lot in the system. It may never have been recorded — check the lot ID and try again.`,
   ORDER_NOT_FOUND: (e) =>
-    `One of the orders you named doesn't exist, so nothing was drafted or changed.`,
+    `That order doesn't exist in the system, so nothing was changed. Check the order ID and try again.`,
   DUPLICATE_ORDER_ACTION: () =>
     `You mentioned the same order more than once. Each order can only have one action — say it again with each order just once.`,
   IDEMPOTENCY_KEY_REUSED: () =>
     `That approval was already used for a different request. Say the commit again and I'll use a fresh approval key.`,
   ORDER_ALREADY_EXISTS: (e) =>
     `Order ${e.message.match(/'([^']+)'/)?.[1] ?? ""} is already registered, so nothing was changed. Orders can only be registered once — use a new order ID.`,
+  COLLECTION_STATUS_CHANGED_CONCURRENTLY: (e) =>
+    `Someone else changed that order's pickup status while I was working. ${e.message} Please say it again and I'll check the current status.`,
   INVALID_INGREDIENT_LOT: () =>
     `One of the ingredient lots was missing an ID or quantity. Say the batch again with each lot and its quantity.`,
 };
@@ -321,7 +346,8 @@ export async function routeVoiceCommand(
       error instanceof TraceLotToolError ||
       error instanceof PreviewResponseToolError ||
       error instanceof CommitResponseToolError ||
-      error instanceof RegisterOrderToolError
+      error instanceof RegisterOrderToolError ||
+      error instanceof UpdateCollectionStatusToolError
     ) {
       // Typed tool error: explain it in plain spoken language, not a raw code.
       return {
