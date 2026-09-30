@@ -9,6 +9,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "provision:db": "tsx scripts/provision-db.ts",
+    "reset:demo": "tsx src/scripts/reset-demo-data.ts",
     "test:demo": "tsx src/integration-tests/demo-script.test.ts"
   },
   "dependencies": {
