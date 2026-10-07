@@ -27,10 +27,10 @@ const MCP_SERVER_URL =
 //   incomplete / flagged     -> red
 //   notified                 -> blue
 const STATUS_NODE_STYLE: Record<string, string> = {
-  collected: "bg-emerald-500",
-  uncollected: "bg-amber-500",
-  incomplete: "bg-red-500",
-  notified: "bg-blue-500",
+  collected: "order-collected",
+  uncollected: "order-uncollected",
+  incomplete: "order-incomplete",
+  notified: "order-notified",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -79,7 +79,7 @@ function orderNode(
     position: { x: 250 + xOffset, y: 340 + index * 70 },
     data: {
       label: `${order.customerName ?? order.orderId}\n${order.orderId}`,
-      className: `order-node ${STATUS_NODE_STYLE[status] ?? "bg-gray-500"}`,
+      className: `order-node ${STATUS_NODE_STYLE[status] ?? "order-fallback"}`,
     },
   };
 }
@@ -91,10 +91,10 @@ function makeEdges(lotId: string, batches: { batchId: string }[]): Edge[] {
     target: `batch-${batch.batchId}`,
     type: "smoothstep",
     animated: false,
-    style: { stroke: "#6b7280", strokeWidth: 2 },
+    style: { stroke: "#c98932", strokeWidth: 2 },
     markerEnd: {
       type: MarkerType.ArrowClosed,
-      color: "#6b7280",
+      color: "#c98932",
     },
   }));
 }
@@ -111,10 +111,10 @@ function makeOrderEdges(
       target: `lot-${lotId}`,
       type: "smoothstep",
       animated: false,
-      style: { stroke: "#6b7280", strokeWidth: 2 },
+      style: { stroke: "#c98932", strokeWidth: 2 },
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color: "#6b7280",
+        color: "#c98932",
       },
     });
   });
@@ -269,10 +269,10 @@ function TracePageContent() {
           source: `lot-${tracedLotId}`,
           target: `batch-${batch.batchId}`,
           type: "smoothstep",
-          style: { stroke: "#6b7280", strokeWidth: 2 },
+          style: { stroke: "#c98932", strokeWidth: 2 },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: "#6b7280",
+            color: "#c98932",
           },
         });
 
@@ -290,7 +290,7 @@ function TracePageContent() {
             data: {
               label: `${order.customerName ?? order.orderId}\n${order.orderId}`,
               className: `order-node ${
-                STATUS_NODE_STYLE[status] ?? "bg-gray-500"
+                STATUS_NODE_STYLE[status] ?? "order-fallback"
               }`,
             },
           });
@@ -300,10 +300,10 @@ function TracePageContent() {
             source: `batch-${batch.batchId}`,
             target: `order-${order.orderId}`,
             type: "smoothstep",
-            style: { stroke: "#9ca3af", strokeWidth: 1.5 },
+            style: { stroke: "#d4b99b", strokeWidth: 1.5 },
             markerEnd: {
               type: MarkerType.ArrowClosed,
-              color: "#9ca3af",
+              color: "#d4b99b",
             },
           });
         });
@@ -312,13 +312,13 @@ function TracePageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="border-b border-gray-200 bg-white px-6 py-4">
+    <div className="min-h-screen bg-[var(--cream)]">
+      <header className="border-b border-[var(--line)] bg-[var(--paper)] px-6 py-5">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
-          <h1 className="text-lg font-semibold text-gray-900">Trace a Lot</h1>
+          <h1 className="display-font text-2xl font-semibold text-[var(--ink)]">Trace a Lot</h1>
           <a
             href="/orders"
-            className="text-sm text-gray-500 hover:text-gray-700"
+            className="text-sm font-semibold text-[var(--muted)] hover:text-[var(--terracotta)]"
           >
             Back to Order Board
           </a>
@@ -334,12 +334,12 @@ function TracePageContent() {
               value={lotId}
               onChange={(e) => setLotId(e.target.value)}
               placeholder="e.g. LOT-RESP-1789754814959"
-              className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 rounded-xl border border-[var(--line)] bg-[var(--paper)] px-4 py-3 text-[var(--ink)] placeholder-[var(--muted)] focus:border-[var(--amber)] focus:outline-none focus:ring-2 focus:ring-[var(--amber-soft)]"
             />
             <button
               type="submit"
               disabled={loading || !lotId.trim()}
-              className="rounded-lg border border-gray-300 bg-white px-6 py-2 text-sm font-medium text-gray-700 shadow-sm disabled:cursor-not-allowed disabled:opacity-50 transition-colors hover:bg-gray-50"
+              className="rounded-xl bg-[var(--terracotta)] px-6 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[var(--terracotta-dark)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? "Tracing…" : "Trace Lot"}
             </button>
@@ -348,7 +348,7 @@ function TracePageContent() {
 
         {/* Error state */}
         {error && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+          <div className="mb-6 rounded-2xl border border-[var(--rose-soft)] bg-[var(--paper)] p-4 text-[var(--rose)]">
             <p className="font-medium">Error</p>
             <p className="mt-1 text-sm">{error}</p>
           </div>
@@ -356,11 +356,11 @@ function TracePageContent() {
 
         {/* Not found state */}
         {notFound && (
-          <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-6 text-center">
-            <p className="text-lg font-medium text-gray-700">
+          <div className="mb-6 rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-6 text-center">
+            <p className="display-font text-2xl font-semibold text-[var(--ink)]">
               This lot was never recorded
             </p>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-[var(--muted)]">
               The lot ID "{lotId}" does not exist in the system. It may have been
               typed incorrectly, or no batch has ever been recorded with this lot.
             </p>
@@ -372,26 +372,26 @@ function TracePageContent() {
           <>
             {/* Summary counts */}
             <div className="mb-6 flex flex-wrap gap-4">
-              <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-                <p className="text-xs font-medium uppercase text-gray-500">
+              <div className="rounded-2xl border border-[var(--line)] bg-[var(--paper)] px-5 py-4 shadow-[var(--shadow)]">
+                <p className="text-xs font-bold uppercase tracking-[.14em] text-[var(--muted)]">
                   Summary
                 </p>
                 <div className="mt-2 flex gap-4">
                   <span className="inline-flex items-center gap-1.5">
-                    <span className="h-3 w-3 rounded-full bg-emerald-500" />
-                    <span className="text-sm text-gray-700">
+                    <span className="h-3 w-3 rounded-full bg-[var(--sage)]" />
+                    <span className="text-sm text-[var(--ink)]">
                       Collected: {result.summary.collected}
                     </span>
                   </span>
                   <span className="inline-flex items-center gap-1.5">
-                    <span className="h-3 w-3 rounded-full bg-amber-500" />
-                    <span className="text-sm text-gray-700">
+                    <span className="h-3 w-3 rounded-full bg-[var(--amber)]" />
+                    <span className="text-sm text-[var(--ink)]">
                       Uncollected: {result.summary.uncollected}
                     </span>
                   </span>
                   <span className="inline-flex items-center gap-1.5">
-                    <span className="h-3 w-3 rounded-full bg-red-500" />
-                    <span className="text-sm text-gray-700">
+                    <span className="h-3 w-3 rounded-full bg-[var(--rose)]" />
+                    <span className="text-sm text-[var(--ink)]">
                       Incomplete: {result.summary.incomplete}
                     </span>
                   </span>
@@ -402,41 +402,41 @@ function TracePageContent() {
             {/* React Flow graph */}
             <div
               ref={reactFlowWrapper}
-              className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+              className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-4 shadow-[var(--shadow)]"
               style={{ height: "520px" }}
             >
               <ReactFlow nodes={nodes} edges={edges} fitView>
                 <Controls>
                   <span className="sr-only">Zoom controls</span>
                 </Controls>
-                <Background color="#e5e7eb" gap={16} />
+                <Background color="#e6dbce" gap={18} />
               </ReactFlow>
             </div>
 
             {/* Legend */}
-            <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-500">
+            <div className="mt-4 flex flex-wrap gap-4 text-xs text-[var(--muted)]">
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded-full bg-gray-400" />
+                <span className="h-3 w-3 rounded-full bg-[var(--terracotta)]" />
                 Lot (source)
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded-full bg-gray-300" />
+                <span className="h-3 w-3 rounded-full bg-[var(--amber)]" />
                 Batch
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded-full bg-emerald-500" />
+                <span className="h-3 w-3 rounded-full bg-[var(--sage)]" />
                 Collected / Fulfilled
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded-full bg-amber-500" />
+                <span className="h-3 w-3 rounded-full bg-[var(--amber)]" />
                 Uncollected / On Hold
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded-full bg-red-500" />
+                <span className="h-3 w-3 rounded-full bg-[var(--rose)]" />
                 Incomplete / Flagged
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded-full bg-blue-500" />
+                <span className="h-3 w-3 rounded-full bg-[var(--plum)]" />
                 Notified
               </span>
             </div>
@@ -445,8 +445,8 @@ function TracePageContent() {
 
         {/* Empty state — no search performed yet */}
         {!result && !error && !notFound && (
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-            <p className="text-gray-500">
+          <div className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-8 text-center shadow-[var(--shadow)]">
+            <p className="text-[var(--muted)]">
               Enter a lot ID above and click "Trace Lot" to see how that lot
               flows through batches and customer orders.
             </p>
@@ -456,20 +456,20 @@ function TracePageContent() {
 
       <style>{`
         .lot-node {
-          background: #4b5563 !important;
+          background: var(--terracotta) !important;
           color: white !important;
           border-radius: 8px;
           padding: 8px 16px;
           font-weight: 600;
           font-size: 14px;
-          border: 2px solid #374151;
+          border: 2px solid var(--terracotta-dark);
         }
         .batch-node {
-          background: #f3f4f6 !important;
-          color: #374151 !important;
+          background: var(--amber-soft) !important;
+          color: var(--ink) !important;
           border-radius: 8px;
           padding: 8px 16px;
-          border: 2px solid #d1d5db;
+          border: 2px solid var(--amber);
           font-weight: 500;
           font-size: 13px;
         }
@@ -481,12 +481,17 @@ function TracePageContent() {
           font-size: 13px;
           border: 1px solid rgba(255,255,255,0.3);
         }
+        .order-collected { background: var(--sage) !important; }
+        .order-uncollected { background: var(--amber) !important; }
+        .order-incomplete { background: var(--rose) !important; }
+        .order-notified { background: var(--plum) !important; }
+        .order-fallback { background: var(--muted) !important; }
         .no-batches-node {
-          background: #fef3c7 !important;
-          color: #92400e !important;
+          background: var(--amber-soft) !important;
+          color: #936321 !important;
           border-radius: 8px;
           padding: 16px 24px;
-          border: 2px dashed #f59e0b;
+          border: 2px dashed var(--amber);
           font-size: 14px;
         }
       `}</style>
@@ -502,8 +507,8 @@ export default function TracePage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-white">
-          <p className="text-sm text-gray-500">Loading trace…</p>
+        <div className="flex min-h-screen items-center justify-center bg-[var(--cream)]">
+          <p className="text-sm text-[var(--muted)]">Loading trace…</p>
         </div>
       }
     >

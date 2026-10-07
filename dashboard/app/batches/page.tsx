@@ -22,92 +22,93 @@ export default async function BatchesPage() {
   );
 
   return (
-    <main className="min-h-screen bg-white p-6">
-      <div className="mx-auto max-w-4xl">
+    <main className="min-h-screen bg-[var(--cream)] px-5 py-8 sm:px-8 lg:py-12">
+      <div className="mx-auto max-w-5xl">
         <header className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Batch Board</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--amber)]">Production ledger</p>
+          <h1 className="display-font mt-2 text-4xl font-semibold text-[var(--ink)]">Batch Board</h1>
+          <p className="mt-2 text-sm text-[var(--muted)]">
             {sorted.length} batch{sorted.length !== 1 ? "es" : ""} total
           </p>
         </header>
 
         {sorted.length === 0 ? (
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-            <p className="text-gray-500">No batches found.</p>
+          <div className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-10 text-center shadow-[var(--shadow)]">
+            <p className="text-[var(--muted)]">No batches found.</p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--paper)] shadow-[var(--shadow)]">
+            <table className="min-w-full divide-y divide-[var(--line)]">
+              <thead className="bg-[var(--paper-deep)]">
                 <tr>
                   <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                    className="px-5 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]"
                     scope="col"
                   >
                     Batch ID
                   </th>
                   <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                    className="px-5 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]"
                     scope="col"
                   >
                     Product
                   </th>
                   <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                    className="px-5 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]"
                     scope="col"
                   >
                     Produced
                   </th>
                   <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                    className="px-5 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]"
                     scope="col"
                   >
                     Lots
                   </th>
                   <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                    className="px-5 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]"
                     scope="col"
                   >
                     Orders
                   </th>
                   <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                    className="px-5 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]"
                     scope="col"
                   >
                     <span className="sr-only">Trace</span>
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[var(--line)]">
                 {sorted.map((batch) => (
-                  <tr key={batch.batchId}>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm font-mono text-gray-900">
+                  <tr key={batch.batchId} className="transition hover:bg-[var(--cream)]">
+                    <td className="whitespace-nowrap px-5 py-4 text-sm font-mono font-semibold text-[var(--ink)]">
                       {batch.batchId}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                    <td className="whitespace-nowrap px-5 py-4 text-sm font-medium text-[var(--ink)]">
                       {batch.product}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                    <td className="whitespace-nowrap px-5 py-4 text-sm text-[var(--muted)]">
                       {formatProducedDate(batch.producedDate)}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                    <td className="whitespace-nowrap px-5 py-4 text-sm text-[var(--ink)]">
                       {batch.lotCount}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                    <td className="whitespace-nowrap px-5 py-4 text-sm text-[var(--ink)]">
                       {batch.orderCount}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right">
+                    <td className="whitespace-nowrap px-5 py-4 text-right">
                       {batch.lotIds.length > 0 ? (
                         <Link
                           href={`/trace?lotId=${encodeURIComponent(batch.lotIds[0])}`}
-                          className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                          className="text-sm font-bold text-[var(--terracotta)] hover:text-[var(--terracotta-dark)]"
                         >
                           Trace
                         </Link>
                       ) : (
                         <Link
                           href="/trace"
-                          className="text-sm text-gray-400 hover:text-gray-600"
+                          className="text-sm text-[var(--muted)] hover:text-[var(--ink)]"
                         >
                           Trace
                         </Link>

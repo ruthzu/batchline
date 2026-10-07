@@ -2,10 +2,10 @@ import { getAllOrders } from "../../lib/orders";
 import type { Order } from "@batchline/shared";
 
 const STATUS_CLASS: Record<string, string> = {
-  fulfilled: "bg-emerald-100 text-emerald-800",
-  on_hold: "bg-amber-100 text-amber-800",
-  notified: "bg-blue-100 text-blue-800",
-  flagged_incomplete: "bg-red-100 text-red-800",
+  fulfilled: "bg-[var(--sage-soft)] text-[var(--sage)]",
+  on_hold: "bg-[var(--amber-soft)] text-[#936321]",
+  notified: "bg-[var(--plum-soft)] text-[var(--plum)]",
+  flagged_incomplete: "bg-[var(--rose-soft)] text-[var(--rose)]",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -20,9 +20,9 @@ const STATUS_LABEL: Record<string, string> = {
 // masquerading as a real state, because absent data is not a state someone
 // chose.
 const COLLECTION_CLASS: Record<string, string> = {
-  collected: "bg-emerald-100 text-emerald-800",
-  uncollected: "bg-orange-100 text-orange-800",
-  incomplete: "bg-gray-100 text-gray-600",
+  collected: "bg-[var(--sage-soft)] text-[var(--sage)]",
+  uncollected: "bg-[var(--amber-soft)] text-[#936321]",
+  incomplete: "bg-[var(--rose-soft)] text-[var(--rose)]",
 };
 
 const COLLECTION_LABEL: Record<string, string> = {
@@ -49,18 +49,19 @@ export default async function OrdersPage() {
   ].filter((s) => s.orders.length > 0);
 
   return (
-    <main className="min-h-screen bg-white p-6">
-      <div className="mx-auto max-w-4xl">
+    <main className="min-h-screen bg-[var(--cream)] px-5 py-8 sm:px-8 lg:py-12">
+      <div className="mx-auto max-w-5xl">
         <header className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Order Board</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--terracotta)]">Customer response</p>
+          <h1 className="display-font mt-2 text-4xl font-semibold text-[var(--ink)]">Order Board</h1>
+          <p className="mt-2 text-sm text-[var(--muted)]">
             {orders.length} order{orders.length !== 1 ? "s" : ""} total
           </p>
         </header>
 
         {statusSections.length === 0 ? (
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-            <p className="text-gray-500">No orders found.</p>
+          <div className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-10 text-center shadow-[var(--shadow)]">
+            <p className="text-[var(--muted)]">No orders found.</p>
           </div>
         ) : (
           <div className="space-y-8">
@@ -68,81 +69,81 @@ export default async function OrdersPage() {
               <section key={status}>
                 <div className="mb-3 flex items-center gap-3">
                   <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide ${STATUS_CLASS[status] ?? "bg-gray-100 text-gray-800"}`}
+                    className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide ${STATUS_CLASS[status] ?? "bg-[var(--paper-deep)] text-[var(--muted)]"}`}
                   >
                     {STATUS_LABEL[status] ?? status}
                   </span>
-                  <span className="text-sm text-gray-400">
+                  <span className="text-sm text-[var(--muted)]">
                     {sectionOrders.length}
                   </span>
                 </div>
 
-                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                <div className="overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--paper)] shadow-[var(--shadow)]">
+                  <table className="min-w-full divide-y divide-[var(--line)]">
+                    <thead className="bg-[var(--paper-deep)]">
                       <tr>
                         <th
-                          className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                          className="px-5 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]"
                           scope="col"
                         >
                           Order ID
                         </th>
                         <th
-                          className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                          className="px-5 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]"
                           scope="col"
                         >
                           Customer
                         </th>
                         <th
-                          className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                          className="px-5 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]"
                           scope="col"
                         >
                           Contact
                         </th>
                         <th
-                          className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                          className="px-5 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]"
                           scope="col"
                         >
                           Status
                         </th>
                         <th
-                          className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                          className="px-5 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]"
                           scope="col"
                         >
                           Collection
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-[var(--line)]">
                       {sectionOrders.map((order) => (
-                        <tr key={order.orderId}>
-                          <td className="whitespace-nowrap px-4 py-3 text-sm font-mono text-gray-900">
+                        <tr key={order.orderId} className="transition hover:bg-[var(--cream)]">
+                          <td className="whitespace-nowrap px-5 py-4 text-sm font-mono font-semibold text-[var(--ink)]">
                             {order.orderId}
                           </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                          <td className="whitespace-nowrap px-5 py-4 text-sm font-medium text-[var(--ink)]">
                             {order.customerName}
                           </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                          <td className="whitespace-nowrap px-5 py-4 text-sm text-[var(--muted)]">
                             {order.customerContact}
                           </td>
-                          <td className="whitespace-nowrap px-4 py-3">
+                          <td className="whitespace-nowrap px-5 py-4">
                             <span
-                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_CLASS[order.status] ?? "bg-gray-100 text-gray-800"}`}
+                              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${STATUS_CLASS[order.status] ?? "bg-[var(--paper-deep)] text-[var(--muted)]"}`}
                             >
                               {STATUS_LABEL[order.status] ?? order.status}
                             </span>
                           </td>
-                          <td className="whitespace-nowrap px-4 py-3">
+                          <td className="whitespace-nowrap px-5 py-4">
                             {order.collectionStatus === undefined ? (
                               <span
-                                className="inline-flex items-center rounded-full border border-dashed border-gray-400 px-2.5 py-0.5 text-xs font-semibold text-gray-500"
+                                className="inline-flex items-center rounded-full border border-dashed border-[var(--muted)] px-3 py-1 text-xs font-bold text-[var(--muted)]"
                                 title="collectionStatus is missing from this order's record"
                               >
                                 Missing
                               </span>
                             ) : (
                               <span
-                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLLECTION_CLASS[order.collectionStatus] ?? "bg-gray-100 text-gray-800"}`}
+                                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${COLLECTION_CLASS[order.collectionStatus] ?? "bg-[var(--paper-deep)] text-[var(--muted)]"}`}
                               >
                                 {COLLECTION_LABEL[order.collectionStatus] ?? order.collectionStatus}
                               </span>
