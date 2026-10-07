@@ -187,13 +187,13 @@ export default function VoicePage() {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4">
+    <div className="flex min-h-screen flex-col bg-[var(--cream)]">
+      <header className="border-b border-[var(--line)] bg-[var(--paper)] px-6 py-5">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <h1 className="text-lg font-semibold text-gray-900">
+          <h1 className="display-font text-2xl font-semibold text-[var(--ink)]">
             Simulated Alexa+ Interface
           </h1>
-          <a href="/" className="text-sm text-gray-500 hover:text-gray-700">
+          <a href="/" className="text-sm font-semibold text-[var(--muted)] hover:text-[var(--terracotta)]">
             Back to Home
           </a>
         </div>
@@ -201,8 +201,8 @@ export default function VoicePage() {
 
       {/* Honest labeling: this stands in for real Alexa+ per the documented
           fallback plan, and that must be visible, not hidden. */}
-      <div className="border-b border-amber-200 bg-amber-50 px-6 py-2.5">
-        <p className="mx-auto max-w-3xl text-xs leading-relaxed text-amber-800">
+      <div className="border-b border-[var(--amber)] bg-[var(--amber-soft)] px-6 py-3">
+        <p className="mx-auto max-w-3xl text-xs leading-relaxed text-[#805825]">
           <span className="font-semibold">SIMULATION —</span> This page is a
           browser-based stand-in for Alexa+ (the project&apos;s documented
           fallback plan). Speech is captured in the browser, routed through the
@@ -213,13 +213,13 @@ export default function VoicePage() {
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-6 py-6">
         {/* Chat transcript */}
-        <div className="flex-1 space-y-4 overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="flex-1 space-y-4 overflow-y-auto rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 shadow-[var(--shadow)]">
           {turns.length === 0 && (
             <div className="py-10 text-center">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-[var(--muted)]">
                 Tap the microphone or type a command below.
               </p>
-              <p className="mt-1 text-xs text-gray-400">
+              <p className="mt-1 text-xs text-[var(--muted)] opacity-80">
                 Try: &ldquo;Trace flour lot F17&rdquo; or &ldquo;Batch 24 used
                 flour lot F17, size 50, product sourdough, produced today&rdquo;
               </p>
@@ -229,8 +229,8 @@ export default function VoicePage() {
           {turns.map((turn) =>
             turn.speaker === "baker" ? (
               <div key={turn.id} className="flex justify-end">
-                <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-blue-600 px-4 py-2.5 text-sm text-white shadow-sm">
-                  <p className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-blue-200">
+                <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-[var(--terracotta)] px-4 py-2.5 text-sm text-white shadow-sm">
+                  <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--terracotta-soft)]">
                     Baker
                   </p>
                   {turn.text}
@@ -241,11 +241,11 @@ export default function VoicePage() {
                 <div
                   className={`max-w-[80%] rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm shadow-sm ${
                     turn.pending
-                      ? "bg-gray-100 text-gray-400"
-                      : "bg-gray-800 text-gray-50"
+                      ? "bg-[var(--paper-deep)] text-[var(--muted)]"
+                      : "bg-[var(--ink)] text-[var(--cream)]"
                   }`}
                 >
-                  <p className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-400">
+                  <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--amber)]">
                     Alexa+
                     {turn.toolCalled ? ` · ${turn.toolCalled}` : ""}
                   </p>
@@ -270,10 +270,10 @@ export default function VoicePage() {
                   : "Start listening"
                 : "Voice input isn't supported in this browser"
             }
-            className={`flex h-20 w-20 items-center justify-center rounded-full text-white shadow-lg transition-colors focus:outline-none focus:ring-4 disabled:cursor-not-allowed disabled:bg-gray-300 ${
+            className={`flex h-20 w-20 items-center justify-center rounded-full text-white shadow-lg transition-colors focus:outline-none focus:ring-4 disabled:cursor-not-allowed disabled:bg-[var(--line)] ${
               listening
-                ? "bg-red-500 hover:bg-red-600 focus:ring-red-200"
-                : "bg-blue-600 hover:bg-blue-700 focus:ring-blue-200"
+                ? "bg-[var(--rose)] hover:bg-[#8e413c] focus:ring-[var(--rose-soft)]"
+                : "bg-[var(--terracotta)] hover:bg-[var(--terracotta-dark)] focus:ring-[var(--terracotta-soft)]"
             }`}
           >
             {listening ? (
@@ -294,7 +294,7 @@ export default function VoicePage() {
             )}
           </button>
 
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-[var(--muted)]">
             {micSupported === null
               ? "Checking microphone support…"
               : micSupported
@@ -304,7 +304,7 @@ export default function VoicePage() {
                 : "Voice input isn't supported in this browser, try Chrome. You can still type commands below."}
           </p>
 
-          <label className="flex items-center gap-2 text-xs text-gray-500">
+          <label className="flex items-center gap-2 text-xs text-[var(--muted)]">
             <input
               type="checkbox"
               checked={speechEnabled}
@@ -312,7 +312,7 @@ export default function VoicePage() {
                 setSpeechEnabled(e.target.checked);
                 if (!e.target.checked) window.speechSynthesis?.cancel();
               }}
-              className="h-3.5 w-3.5 rounded border-gray-300"
+              className="h-3.5 w-3.5 rounded border-[var(--line)] accent-[var(--terracotta)]"
             />
             Speak replies out loud
           </label>
@@ -325,12 +325,12 @@ export default function VoicePage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type a command instead (e.g. Trace flour lot F17)…"
-            className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 rounded-xl border border-[var(--line)] bg-[var(--paper)] px-4 py-3 text-sm text-[var(--ink)] placeholder-[var(--muted)] focus:border-[var(--amber)] focus:outline-none focus:ring-2 focus:ring-[var(--amber-soft)]"
           />
           <button
             type="submit"
             disabled={!input.trim()}
-            className="rounded-lg border border-gray-300 bg-white px-6 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl bg-[var(--terracotta)] px-6 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[var(--terracotta-dark)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Send
           </button>
