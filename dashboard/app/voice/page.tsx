@@ -46,6 +46,25 @@ type Turn =
 
 let nextTurnId = 1;
 
+// ---------------------------------------------------------------------------
+// Conversation session id
+//
+// The server keeps per-conversation context (the last trace, the pending
+// draft) in memory keyed by sessionId, so one browser tab is one conversation.
+// Generated once and kept in sessionStorage: a page refresh re-enters the SAME
+// conversation, "New conversation" starts a fresh one.
+// ---------------------------------------------------------------------------
+
+const SESSION_STORAGE_KEY = "batchline.voice.sessionId";
+
+function readOrCreateSessionId(): string {
+  const existing = window.sessionStorage.getItem(SESSION_STORAGE_KEY);
+  if (existing) return existing;
+  const fresh = crypto.randomUUID();
+  window.sessionStorage.setItem(SESSION_STORAGE_KEY, fresh);
+  return fresh;
+}
+
 export default function VoicePage() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
@@ -100,7 +119,7 @@ export default function VoicePage() {
         const response = await fetch(`${MCP_SERVER_URL}/api/voice-command`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ transcript }),
+          body: JSON.stringify({ transcript, sessionId: readOrCreateSessionId() }),
         });
 
         if (!response.ok) {
@@ -176,6 +195,14 @@ export default function VoicePage() {
     setListening(false);
   }, []);
 
+  // Fresh sessionId + empty transcript: the server-side state for the old
+  // conversation is left to expire, the browser starts a clean one.
+  const startNewConversation = useCallback(() => {
+    window.sessionStorage.setItem(SESSION_STORAGE_KEY, crypto.randomUUID());
+    window.speechSynthesis?.cancel();
+    setTurns([]);
+  }, []);
+
   const handleTextSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
@@ -189,13 +216,22 @@ export default function VoicePage() {
   return (
     <div className="flex min-h-screen flex-col bg-[var(--cream)]">
       <header className="border-b border-[var(--line)] bg-[var(--paper)] px-6 py-5">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
           <h1 className="display-font text-2xl font-semibold text-[var(--ink)]">
             Simulated Alexa+ Interface
           </h1>
-          <a href="/" className="text-sm font-semibold text-[var(--muted)] hover:text-[var(--terracotta)]">
-            Back to Home
-          </a>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={startNewConversation}
+              className="rounded-xl border border-[var(--line)] bg-[var(--paper)] px-4 py-2 text-sm font-semibold text-[var(--ink)] shadow-sm transition-colors hover:border-[var(--terracotta)] hover:text-[var(--terracotta)]"
+            >
+              New conversation
+            </button>
+            <a href="/" className="text-sm font-semibold text-[var(--muted)] hover:text-[var(--terracotta)]">
+              Back to Home
+            </a>
+          </div>
         </div>
       </header>
 

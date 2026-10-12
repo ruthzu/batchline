@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { recordBatchTool } from "../tools/record-batch.js";
 import { correctBatchTool } from "../tools/correct-batch.js";
@@ -49,13 +50,56 @@ const VOICE_TOOLS = [
   },
 ] as const;
 
-export type VoiceToolName = (typeof VOICE_TOOLS)[number]["name"];
+// ---------------------------------------------------------------------------
+// VOICE-LAYER CONVENIENCE TOOLS — NOT MCP TOOLS.
+//
+// Everything above mirrors a tool the MCP server actually registers in
+// src/index.ts. The two entries below do NOT: they are never registered on
+// the MCP server, never exported over the wire to MCP clients, and exist only
+// so the voice conversation can span requests. Their arguments are validated
+// with Zod exactly like the real ones, and their server-side resolution calls
+// the REAL tools underneath (previewResponseTool / commitResponseTool) — no
+// ledger behavior is reimplemented here.
+// ---------------------------------------------------------------------------
+
+// Which action to take for each collection-status bucket of the last trace.
+// Every bucket is optional: the baker only ever names some of them, and the
+// buckets they didn't mention are skipped, not guessed.
+export const draftResponsePolicySchema = z.object({
+  uncollected: z.enum(["hold", "notify", "flag"]).optional(),
+  collected: z.enum(["hold", "notify", "flag"]).optional(),
+  incomplete: z.enum(["hold", "notify", "flag"]).optional(),
+});
+
+export type DraftResponsePolicy = z.infer<typeof draftResponsePolicySchema>;
+
+const VOICE_ONLY_TOOLS = [
+  {
+    name: "draft_response_from_trace",
+    description:
+      "Draft a customer response from the ingredient lot traced earlier in THIS conversation, applying one action (hold, notify or flag) to each collection-status bucket the baker mentioned. Voice-layer convenience: the server resolves the buckets against the stored trace and orders, so no order IDs are ever spoken or supplied. Changes nothing.",
+    schema: draftResponsePolicySchema,
+  },
+  {
+    name: "approve_pending_response",
+    description:
+      "Commit the response draft that is pending in THIS conversation, after the baker explicitly approves it (\"approve\", \"yes\", \"go ahead\"). Voice-layer convenience: takes no arguments — the preview and its order actions come from the session, and it is safe to repeat because the commit is idempotent.",
+    schema: z.object({}),
+  },
+] as const;
+
+export type VoiceOnlyToolName = (typeof VOICE_ONLY_TOOLS)[number]["name"];
+
+// Everything Groq may call: the 7 real MCP tools plus the 2 voice-only ones.
+const ALL_VOICE_TOOLS = [...VOICE_TOOLS, ...VOICE_ONLY_TOOLS];
+
+export type VoiceToolName = (typeof ALL_VOICE_TOOLS)[number]["name"];
 
 // Groq speaks the OpenAI "tools" dialect: each entry is
 // { type: "function", function: { name, description, parameters } }.
 // zodToJsonSchema adds a "$schema" key that the API does not want, so it is
 // stripped from the generated parameters object.
-export const voiceToolDefinitions = VOICE_TOOLS.map((tool) => {
+export const voiceToolDefinitions = ALL_VOICE_TOOLS.map((tool) => {
   const jsonSchema = zodToJsonSchema(tool.schema, {
     $refStrategy: "none",
   }) as Record<string, unknown>;
@@ -78,6 +122,6 @@ export function getVoiceToolDefinition(name: string) {
 }
 
 export function getVoiceToolSchema(name: string) {
-  const tool = VOICE_TOOLS.find((tool) => tool.name === name);
+  const tool = ALL_VOICE_TOOLS.find((tool) => tool.name === name);
   return tool ? tool.schema : null;
 }
