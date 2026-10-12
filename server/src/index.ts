@@ -186,7 +186,7 @@ async function handleVoiceCommand(req: any, res: any): Promise<void> {
   }
 
   if (req.method !== "POST") {
-    sendJson(res, 405, { code: "METHOD_NOT_ALLOWED", message: "Use POST with a JSON body: { transcript: string }" });
+    sendJson(res, 405, { code: "METHOD_NOT_ALLOWED", message: "Use POST with a JSON body: { transcript: string, sessionId?: string }" });
     return;
   }
 
@@ -200,21 +200,35 @@ async function handleVoiceCommand(req: any, res: any): Promise<void> {
     }
   }
 
-  let transcript: unknown;
+  let parsedBody: { transcript?: unknown; sessionId?: unknown };
   try {
-    transcript = JSON.parse(body)?.transcript;
+    parsedBody = JSON.parse(body);
   } catch {
     sendJson(res, 400, { code: "BAD_REQUEST", message: "Request body must be valid JSON" });
     return;
   }
+
+  const transcript = parsedBody?.transcript;
+  const sessionId = parsedBody?.sessionId;
 
   if (typeof transcript !== "string") {
     sendJson(res, 400, { code: "BAD_REQUEST", message: "'transcript' must be a string" });
     return;
   }
 
+  // sessionId is optional: omitting it keeps the request stateless, exactly
+  // as before. When present it must be a usable key for the session store.
+  let sessionKey: string | undefined;
+  if (sessionId !== undefined) {
+    if (typeof sessionId !== "string" || sessionId.trim().length === 0) {
+      sendJson(res, 400, { code: "BAD_REQUEST", message: "'sessionId' must be a non-empty string" });
+      return;
+    }
+    sessionKey = sessionId;
+  }
+
   try {
-    const result = await routeVoiceCommand(transcript);
+    const result = await routeVoiceCommand(transcript, sessionKey);
     sendJson(res, 200, result);
   } catch (error) {
     // routeVoiceCommand catches its own tool errors; this is a last resort.
@@ -232,15 +246,15 @@ async function main() {
 
   await server.connect(transport);
 
-  const httpServer = createServer((req, res) => {
+  const httpServer = createServer(async (req, res) => {
     // Intercept REST API paths before handing off to the MCP transport.
     if (req.url?.startsWith("/api/")) {
       if (req.url.startsWith("/api/trace-lot")) {
-        handleTraceLot(req, res);
+        await handleTraceLot(req, res);
         return;
       }
       if (req.url.startsWith("/api/voice-command")) {
-        handleVoiceCommand(req, res);
+        await handleVoiceCommand(req, res);
         return;
       }
       // Unknown /api/* — 404, don't pass to MCP transport.
