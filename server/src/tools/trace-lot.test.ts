@@ -285,6 +285,182 @@ async function runTests() {
   }
 
   console.log();
+
+  // Test 6: An order linked to TWO batches of the same lot must be counted
+  // ONCE in the summary, while still appearing under both batches.
+  // This is the seeded-data hazard: ORDER-2026-0002 is linked to both
+  // BATCH-2026-03-14-001 and BATCH-2026-03-21-002.
+  console.log("Test 6: Order shared by two batches is counted once in the summary");
+  console.log("---------------------------------------------------------------");
+
+  const sharedLotId = `LOT-TRACE-SHARED-${runId}`;
+  const sharedBatchA = `TEST-TRACE-SHARED-A-${runId}`;
+  const sharedBatchB = `TEST-TRACE-SHARED-B-${runId}`;
+  const sharedOrderId = `ORDER-TRACE-SHARED-${runId}`; // linked to BOTH batches, uncollected
+  const sharedCollectedId = `ORDER-TRACE-SHARED-C-${runId}`; // batch A only, collected
+  const sharedUncollectedId = `ORDER-TRACE-SHARED-U-${runId}`; // batch B only, uncollected
+  const sharedNoMetadataId = `ORDER-TRACE-SHARED-N-${runId}`; // batch B only, no METADATA
+
+  console.log("Shared Lot ID:", sharedLotId);
+  console.log("Batches:", sharedBatchA, "+", sharedBatchB);
+  console.log("Shared order:", sharedOrderId, "(linked to both batches, uncollected)");
+
+  try {
+    // Setup: two batches both using the same lot
+    await recordBatchTool.handler({
+      batchId: sharedBatchA,
+      product: "Sourdough-Shared",
+      producedDate: new Date().toISOString(),
+      batchSize: 50,
+      ingredientLots: [{ lotId: sharedLotId, quantityUsed: 20 }],
+    });
+    await recordBatchTool.handler({
+      batchId: sharedBatchB,
+      product: "Croissant-Shared",
+      producedDate: new Date().toISOString(),
+      batchSize: 60,
+      ingredientLots: [{ lotId: sharedLotId, quantityUsed: 25 }],
+    });
+    console.log("✓ Both batches recorded with the shared lot");
+  } catch (error) {
+    console.log("✗ Failed to record the shared-lot batches:");
+    console.log("Error:", error);
+    return;
+  }
+
+  try {
+    // Seed batch-order links: the shared order under BOTH batches, plus three
+    // single-batch orders (collected, uncollected, and one missing metadata)
+    const links: { batchId: string; orderId: string }[] = [
+      { batchId: sharedBatchA, orderId: sharedOrderId },
+      { batchId: sharedBatchB, orderId: sharedOrderId },
+      { batchId: sharedBatchA, orderId: sharedCollectedId },
+      { batchId: sharedBatchB, orderId: sharedUncollectedId },
+      { batchId: sharedBatchB, orderId: sharedNoMetadataId },
+    ];
+    for (const { batchId, orderId } of links) {
+      await documentClient.send(
+        new PutCommand({
+          TableName: TABLE_NAME,
+          Item: {
+            PK: `BATCH#${batchId}`,
+            SK: `ORDER#${orderId}`,
+            batchId,
+            orderId,
+            quantityAllocated: 10,
+            entityType: "BATCH_ORDER_LINK",
+          },
+        })
+      );
+    }
+
+    // Order metadata: shared order, one collected, one uncollected.
+    // NOTE: no METADATA item for sharedNoMetadataId on purpose (incomplete)
+    await documentClient.send(
+      new PutCommand({
+        TableName: TABLE_NAME,
+        Item: {
+          PK: `ORDER#${sharedOrderId}`,
+          SK: "METADATA",
+          orderId: sharedOrderId,
+          customerName: "Shared Customer",
+          customerContact: "shared@example.test",
+          status: "fulfilled",
+          collectionStatus: "uncollected",
+          entityType: "ORDER",
+        },
+      })
+    );
+    await documentClient.send(
+      new PutCommand({
+        TableName: TABLE_NAME,
+        Item: {
+          PK: `ORDER#${sharedCollectedId}`,
+          SK: "METADATA",
+          orderId: sharedCollectedId,
+          customerName: "Collected Customer",
+          customerContact: "collected@example.test",
+          status: "fulfilled",
+          collectionStatus: "collected",
+          entityType: "ORDER",
+        },
+      })
+    );
+    await documentClient.send(
+      new PutCommand({
+        TableName: TABLE_NAME,
+        Item: {
+          PK: `ORDER#${sharedUncollectedId}`,
+          SK: "METADATA",
+          orderId: sharedUncollectedId,
+          customerName: "Uncollected Customer",
+          customerContact: "uncollected@example.test",
+          status: "fulfilled",
+          collectionStatus: "uncollected",
+          entityType: "ORDER",
+        },
+      })
+    );
+
+    const result = await traceLotTool.handler({ lotId: sharedLotId });
+    const parsed = JSON.parse(result.content[0].text);
+
+    const batchA = parsed.batches.find(
+      (b: { batchId: string }) => b.batchId === sharedBatchA
+    );
+    const batchB = parsed.batches.find(
+      (b: { batchId: string }) => b.batchId === sharedBatchB
+    );
+    const sharedInA =
+      batchA?.orders.filter(
+        (o: { orderId: string }) => o.orderId === sharedOrderId
+      ) ?? [];
+    const sharedInB =
+      batchB?.orders.filter(
+        (o: { orderId: string }) => o.orderId === sharedOrderId
+      ) ?? [];
+
+    const twoBatchesOk = parsed.batches.length === 2 && batchA && batchB;
+    const sharedListedTwiceOk = sharedInA.length === 1 && sharedInB.length === 1;
+    const sharedDataConsistentOk =
+      sharedInA[0]?.collectionStatus === "uncollected" &&
+      sharedInB[0]?.collectionStatus === "uncollected" &&
+      sharedInA[0]?.customerName === "Shared Customer" &&
+      sharedInB[0]?.customerName === "Shared Customer";
+    // 4 DISTINCT orders: 1 collected, 2 uncollected (shared + single-batch),
+    // 1 incomplete. Counting the shared order once per batch (the old bug)
+    // would give uncollected: 3.
+    const summaryOk =
+      parsed.summary.collected === 1 &&
+      parsed.summary.uncollected === 2 &&
+      parsed.summary.incomplete === 1;
+
+    if (twoBatchesOk && sharedListedTwiceOk && sharedDataConsistentOk && summaryOk) {
+      console.log("✓ Shared order counted ONCE in the summary but listed under BOTH batches");
+      console.log("Result:", JSON.stringify(parsed, null, 2));
+    } else {
+      console.log("✗ Unexpected shared-order trace result:");
+      console.log(
+        JSON.stringify(
+          {
+            twoBatchesOk,
+            sharedListedTwiceOk,
+            sharedDataConsistentOk,
+            summaryOk,
+            summary: parsed.summary,
+          },
+          null,
+          2
+        )
+      );
+      console.log("Result:", JSON.stringify(parsed, null, 2));
+    }
+  } catch (error) {
+    console.log("✗ Failed with unexpected error:");
+    console.log("Error:", error);
+  }
+
+  console.log();
   console.log("=== Tests Complete ===");
 }
 

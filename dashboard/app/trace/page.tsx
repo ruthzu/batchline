@@ -283,8 +283,12 @@ function TracePageContent() {
 
         orders.forEach((order: TracedOrder, oIdx: number) => {
           const status = order.collectionStatus;
+          // Node id is scoped to the batch: an order linked to two batches
+          // legitimately appears under both, and React Flow requires globally
+          // unique node ids — `order-<orderId>` alone would emit two nodes
+          // with the same id and the second would clobber the first.
           nodes.push({
-            id: `order-${order.orderId}`,
+            id: `order-${batch.batchId}-${order.orderId}`,
             type: "default",
             position: { x: batchX + 200, y: startY + oIdx * orderSpacing },
             data: {
@@ -298,7 +302,7 @@ function TracePageContent() {
           edges.push({
             id: `batch-${batch.batchId}->order-${order.orderId}`,
             source: `batch-${batch.batchId}`,
-            target: `order-${order.orderId}`,
+            target: `order-${batch.batchId}-${order.orderId}`,
             type: "smoothstep",
             style: { stroke: "#d4b99b", strokeWidth: 1.5 },
             markerEnd: {

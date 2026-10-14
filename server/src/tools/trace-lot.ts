@@ -178,21 +178,32 @@ export const traceLotTool = {
     // Step 1: Find all ACTIVE batch links for this lot (skip superseded ones)
     const activeBatchIds = await getActiveBatchIdsForLot(input.lotId);
 
-    // Step 2 & 3: For each active batch, fetch its metadata and orders
-    const batches: TracedBatch[] = [];
-    const summary = {
-      collected: 0,
-      uncollected: 0,
-      incomplete: 0,
-    };
+    // Step 2: Fetch each batch's order links. The same order can legitimately
+    // be linked to several batches of this lot (the demo data links
+    // ORDER-2026-0002 to two), so collect the DISTINCT order ids alongside
+    // the per-batch lists.
+    const orderIdsByBatch = new Map<string, string[]>();
+    const distinctOrderIds = new Set<string>();
 
     for (const batchId of activeBatchIds) {
-      const batchMetadata = await getBatchMetadata(batchId);
-
-      const tracedOrders: TracedOrder[] = [];
       const orderIds = await getOrderIdsForBatch(batchId);
-
+      orderIdsByBatch.set(batchId, orderIds);
       for (const orderId of orderIds) {
+        distinctOrderIds.add(orderId);
+      }
+    }
+
+    // Step 3: Fetch each DISTINCT order's metadata exactly once and reuse it.
+    // An order's collectionStatus lives on the order's own METADATA item, so
+    // it is identical wherever the order appears in the per-batch arrays.
+    type FetchedOrder = {
+      customerName?: string;
+      collectionStatus: TracedOrder["collectionStatus"];
+    };
+    const distinctOrders = new Map<string, FetchedOrder>();
+
+    await Promise.all(
+      [...distinctOrderIds].map(async (orderId) => {
         const orderMetadata = await getOrderMetadata(orderId);
 
         // If the order link exists but the order's METADATA item is missing,
@@ -209,12 +220,46 @@ export const traceLotTool = {
           collectionStatus = "incomplete";
         }
 
-        summary[collectionStatus] += 1;
-
-        tracedOrders.push({
-          orderId,
+        distinctOrders.set(orderId, {
           customerName: orderMetadata?.customerName,
           collectionStatus,
+        });
+      })
+    );
+
+    // Step 4: The summary counts DISTINCT orders — an order linked to two
+    // batches is still ONE order, so it is counted exactly once, no matter
+    // how many batches it appears under.
+    const summary = {
+      collected: 0,
+      uncollected: 0,
+      incomplete: 0,
+    };
+
+    for (const { collectionStatus } of distinctOrders.values()) {
+      summary[collectionStatus] += 1;
+    }
+
+    // Step 5: Assemble the per-batch orders arrays from the cached fetches.
+    // The response shape is unchanged: an order linked to two batches still
+    // appears under both, because that is true.
+    const batches: TracedBatch[] = [];
+
+    for (const batchId of activeBatchIds) {
+      const batchMetadata = await getBatchMetadata(batchId);
+
+      const tracedOrders: TracedOrder[] = [];
+      for (const orderId of orderIdsByBatch.get(batchId) ?? []) {
+        const order = distinctOrders.get(orderId);
+        if (!order) {
+          // Unreachable: every linked id was added to distinctOrderIds above
+          // and fetched before this loop.
+          continue;
+        }
+        tracedOrders.push({
+          orderId,
+          customerName: order.customerName,
+          collectionStatus: order.collectionStatus,
         });
       }
 
