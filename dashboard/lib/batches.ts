@@ -98,7 +98,7 @@ export async function getAllBatches(): Promise<BatchWithCounts[]> {
  * nor the GSI can be keyed by batch — "which lots went into batch X?" has no
  * queryable index and the only way to answer it is to Scan everything and
  * filter. That's O(whole table) per batch and gets slower linearly; acceptable
- * for a hackathon-scale dashboard, but call it out rather than hide it.
+ *
  *
  * Filtering mirrors trace-lot.ts's getActiveBatchIdsForLot: links carry a
  * supersededBy tombstone after a correction, and superseded links no longer
