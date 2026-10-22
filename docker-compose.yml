@@ -1,18 +1,24 @@
-version: "3.9"
-
 services:
   dynamodb-local:
     image: amazon/dynamodb-local
+    # A fresh named volume mounts root:root, but the image's default user is
+    # uid 1000 (dynamodblocal), which cannot create its SQLite file there —
+    # Jetty still answers HTTP 400 (so the healthcheck passes) while every DB
+    # request hangs. Run as root so the persisted database stays writable.
+    user: root
     command: "-jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data"
     ports:
       - "8000:8000"
     volumes:
       - dynamodb-data:/home/dynamodblocal/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      # DynamoDB Local answers unauthenticated requests with HTTP 400, so a
+      # -f check would always fail. Any HTTP response means the JVM is up.
+      test: ["CMD", "curl", "-s", "-o", "/dev/null", "http://localhost:8000"]
       interval: 5s
-      retries: 5
-      start_period: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
 
 volumes:
   dynamodb-data:
