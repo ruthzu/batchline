@@ -55,7 +55,8 @@ export default function Home() {
 
       <section className="border-y border-[var(--line)] bg-[var(--paper-deep)]"><div className="mx-auto max-w-6xl px-6 py-16 lg:px-10"><div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr]"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--terracotta)]">The four-step demo</p><h2 className="display-font mt-3 text-4xl font-semibold leading-tight text-[var(--ink)]">From a spoken note to a clear next step.</h2></div><ol className="grid gap-5 sm:grid-cols-2">{[["Record", "Tell Batchline what you made, by voice."], ["Recall", "A lot becomes a question that needs answering."], ["Trace", "Follow the lot through batches and orders."], ["Respond", "See who needs a hold, notice, or follow-up."]].map(([title, text], i) => <li key={title} className="flex gap-4"><span className="display-font text-3xl font-semibold text-[var(--amber)]">0{i + 1}</span><div><h3 className="font-bold text-[var(--ink)]">{title}</h3><p className="mt-1 text-sm leading-6 text-[var(--muted)]">{text}</p></div></li>)}</ol></div></div></section>
 
-      <footer className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-8 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between lg:px-10"><span>Built for the Amazon Developer Hackathon — Alexa+ track</span><a href="https://github.com/ruthzu/batchline" target="_blank" rel="noreferrer" className="font-semibold text-[var(--terracotta)] hover:text-[var(--terracotta-dark)]">View the GitHub repo ↗</a></footer>
+      <footer className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-8 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between lg:px-10">
+        <a href="https://github.com/ruthzu/batchline" target="_blank" rel="noreferrer" className="font-semibold text-[var(--terracotta)] hover:text-[var(--terracotta-dark)]">View the GitHub repo ↗</a></footer>
     </main>
   );
 }

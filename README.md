@@ -75,10 +75,12 @@ cp server/.env.example server/.env      # then paste GROQ_API_KEY
 cp dashboard/.env.example dashboard/.env
 ```
 
+Data runs on DynamoDB Local in development; the DynamoDB client switches to real AWS DynamoDB via environment variables (`DYNAMODB_LOCAL=false`, `AWS_REGION`).
+
 Start DynamoDB Local and seed it (from the repo root):
 
 ```bash
-docker compose up -d                     # DynamoDB Local on localhost:8000
+docker compose up -d --wait              # DynamoDB Local on localhost:8000 (returns once healthy)
 npm run provision:db -w server           # creates the batchline table
 DYNAMODB_LOCAL=true npm run reset:demo -w server   # wipes + seeds the demo dataset
 ```
@@ -120,12 +122,9 @@ Voice conversation flow (deterministic — drives the session resolvers directly
 DYNAMODB_LOCAL=true npx tsx src/voice/session-flow.test.ts
 ```
 
-## Hackathon entry
+## Voice interface
 
-- **Track: Alexa+. Mini-challenge: Open Source** — MIT license (see [LICENSE](LICENSE)), public repo at [github.com/ruthzu/batchline](https://github.com/ruthzu/batchline).
-- **Voice is a clearly labeled simulated Alexa+ interface.** The page at `/voice` uses the browser's Web Speech API for recognition and synthesis in front of the real MCP server; it is not running on an Alexa device. The MCP server is built on Streamable HTTP, so it can be pointed at Alexa+ directly.
-- **Data runs on DynamoDB Local.** The dashboard's DynamoDB client switches to real AWS DynamoDB through environment variables (`DYNAMODB_LOCAL=false`, `AWS_REGION`). Not entering the AWS Builder mini-challenge.
-- **Everything was built during the hackathon window.** The first commit is `a7981c1` — *Initial commit: scaffold Batchline monorepo* — dated **2026-09-14**, with all subsequent work through 2026-10-14.
+The `/voice` page is a **simulated voice assistant**: it uses the browser's Web Speech API for speech recognition and synthesis in front of the real MCP server. It is not running on a smart-speaker device. The MCP server speaks [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#streamable-http), so a voice assistant can connect to it directly.
 
 ## Known limitations
 
